@@ -1,0 +1,1118 @@
+Timer unit: 1e-06 s
+
+Total time: 251.948 s
+File: /Users/youngtodd/scikit-optimize/skopt/optimizer/base.py
+Function: base_minimize at line 20
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    20                                           @profile
+    21                                           def base_minimize(func, dimensions, base_estimator,
+    22                                                             n_calls=100, n_random_starts=10,
+    23                                                             acq_func="EI", acq_optimizer="lbfgs",
+    24                                                             x0=None, y0=None, random_state=None, verbose=False,
+    25                                                             callback=None, n_points=10000, n_restarts_optimizer=5,
+    26                                                             xi=0.01, kappa=1.96, n_jobs=1):
+    27                                               """
+    28                                               Parameters
+    29                                               ----------
+    30                                               * `func` [callable]:
+    31                                                   Function to minimize. Should take a array of parameters and
+    32                                                   return the function values.
+    33                                           
+    34                                               * `dimensions` [list, shape=(n_dims,)]:
+    35                                                   List of search space dimensions.
+    36                                                   Each search dimension can be defined either as
+    37                                           
+    38                                                   - a `(upper_bound, lower_bound)` tuple (for `Real` or `Integer`
+    39                                                     dimensions),
+    40                                                   - a `(upper_bound, lower_bound, "prior")` tuple (for `Real`
+    41                                                     dimensions),
+    42                                                   - as a list of categories (for `Categorical` dimensions), or
+    43                                                   - an instance of a `Dimension` object (`Real`, `Integer` or
+    44                                                     `Categorical`).
+    45                                           
+    46                                                    NOTE: The upper and lower bounds are inclusive for `Integer`
+    47                                                    dimensions.
+    48                                           
+    49                                               * `base_estimator` [sklearn regressor]:
+    50                                                   Should inherit from `sklearn.base.RegressorMixin`.
+    51                                                   In addition, should have an optional `return_std` argument,
+    52                                                   which returns `std(Y | x)`` along with `E[Y | x]`.
+    53                                           
+    54                                               * `n_calls` [int, default=100]:
+    55                                                   Maximum number of calls to `func`.
+    56                                           
+    57                                               * `n_random_starts` [int, default=10]:
+    58                                                   Number of evaluations of `func` with random points before
+    59                                                   approximating it with `base_estimator`.
+    60                                           
+    61                                               * `acq_func` [string, default=`"EI"`]:
+    62                                                   Function to minimize over the posterior distribution. Can be either
+    63                                           
+    64                                                   - `"LCB"` for lower confidence bound,
+    65                                                   - `"EI"` for negative expected improvement,
+    66                                                   - `"PI"` for negative probability of improvement.
+    67                                                   - `"EIps" for negated expected improvement per second to take into
+    68                                                     account the function compute time. Then, the objective function is
+    69                                                     assumed to return two values, the first being the objective value and
+    70                                                     the second being the time taken in seconds.
+    71                                                   - `"PIps"` for negated probability of improvement per second. The
+    72                                                     return type of the objective function is assumed to be similar to
+    73                                                     that of `"EIps
+    74                                           
+    75                                               * `acq_optimizer` [string, `"sampling"` or `"lbfgs"`, default=`"lbfgs"`]:
+    76                                                   Method to minimize the acquistion function. The fit model
+    77                                                   is updated with the optimal value obtained by optimizing `acq_func`
+    78                                                   with `acq_optimizer`.
+    79                                           
+    80                                                   - If set to `"sampling"`, then the point among these `n_points`
+    81                                                     where the `acq_func` is minimum is the next candidate minimum.
+    82                                                   - If set to `"lbfgs"`, then
+    83                                                         - The `n_restarts_optimizer` no. of points which the acquisition
+    84                                                           function is least are taken as start points.
+    85                                                         - `"lbfgs"` is run for 20 iterations with these points as initial
+    86                                                           points to find local minima.
+    87                                                         - The optimal of these local minima is used to update the prior.
+    88                                           
+    89                                               * `x0` [list, list of lists or `None`]:
+    90                                                   Initial input points.
+    91                                           
+    92                                                   - If it is a list of lists, use it as a list of input points.
+    93                                                   - If it is a list, use it as a single initial input point.
+    94                                                   - If it is `None`, no initial input points are used.
+    95                                           
+    96                                               * `y0` [list, scalar or `None`]
+    97                                                   Evaluation of initial input points.
+    98                                           
+    99                                                   - If it is a list, then it corresponds to evaluations of the function
+   100                                                     at each element of `x0` : the i-th element of `y0` corresponds
+   101                                                     to the function evaluated at the i-th element of `x0`.
+   102                                                   - If it is a scalar, then it corresponds to the evaluation of the
+   103                                                     function at `x0`.
+   104                                                   - If it is None and `x0` is provided, then the function is evaluated
+   105                                                     at each element of `x0`.
+   106                                           
+   107                                               * `random_state` [int, RandomState instance, or None (default)]:
+   108                                                   Set random state to something other than None for reproducible
+   109                                                   results.
+   110                                           
+   111                                               * `verbose` [boolean, default=False]:
+   112                                                   Control the verbosity. It is advised to set the verbosity to True
+   113                                                   for long optimization runs.
+   114                                           
+   115                                               * `callback` [callable, list of callables, optional]
+   116                                                   If callable then `callback(res)` is called after each call to `func`.
+   117                                                   If list of callables, then each callable in the list is called.
+   118                                           
+   119                                               * `n_points` [int, default=10000]:
+   120                                                   If `acq_optimizer` is set to `"sampling"`, then `acq_func` is
+   121                                                   optimized by computing `acq_func` at `n_points` randomly sampled
+   122                                                   points.
+   123                                           
+   124                                               * `n_restarts_optimizer` [int, default=5]:
+   125                                                   The number of restarts of the optimizer when `acq_optimizer`
+   126                                                   is `"lbfgs"`.
+   127                                           
+   128                                               * `xi` [float, default=0.01]:
+   129                                                   Controls how much improvement one wants over the previous best
+   130                                                   values. Used when the acquisition is either `"EI"` or `"PI"`.
+   131                                           
+   132                                               * `kappa` [float, default=1.96]:
+   133                                                   Controls how much of the variance in the predicted values should be
+   134                                                   taken into account. If set to be very high, then we are favouring
+   135                                                   exploration over exploitation and vice versa.
+   136                                                   Used when the acquisition is `"LCB"`.
+   137                                           
+   138                                               * `n_jobs` [int, default=1]:
+   139                                                   Number of cores to run in parallel while running the lbfgs
+   140                                                   optimizations over the acquisition function. Valid only when
+   141                                                   `acq_optimizer` is set to "lbfgs."
+   142                                                   Defaults to 1 core. If `n_jobs=-1`, then number of jobs is set
+   143                                                   to number of cores.
+   144                                           
+   145                                               Returns
+   146                                               -------
+   147                                               * `res` [`OptimizeResult`, scipy object]:
+   148                                                   The optimization result returned as a OptimizeResult object.
+   149                                                   Important attributes are:
+   150                                           
+   151                                                   - `x` [list]: location of the minimum.
+   152                                                   - `fun` [float]: function value at the minimum.
+   153                                                   - `models`: surrogate models used for each iteration.
+   154                                                   - `x_iters` [list of lists]: location of function evaluation for each
+   155                                                      iteration.
+   156                                                   - `func_vals` [array]: function value for each iteration.
+   157                                                   - `space` [Space]: the optimization space.
+   158                                                   - `specs` [dict]`: the call specifications.
+   159                                                   - `rng` [RandomState instance]: State of the random state
+   160                                                      at the end of minimization.
+   161                                           
+   162                                                   For more details related to the OptimizeResult object, refer
+   163                                                   http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.OptimizeResult.html
+   164                                               """
+   165         1           22     22.0      0.0      specs = {"args": copy.copy(inspect.currentframe().f_locals),
+   166         1            5      5.0      0.0               "function": inspect.currentframe().f_code.co_name}
+   167                                           
+   168                                               acq_optimizer_kwargs = {
+   169         1            1      1.0      0.0          "n_points": n_points, "n_restarts_optimizer": n_restarts_optimizer,
+   170         1            2      2.0      0.0          "n_jobs": n_jobs}
+   171         1            2      2.0      0.0      acq_func_kwargs = {"xi": xi, "kappa": kappa}
+   172                                           
+   173                                               # Initialize with provided points (x0 and y0) and/or random points
+   174         1            2      2.0      0.0      if x0 is None:
+   175         1            2      2.0      0.0          x0 = []
+   176                                               elif not isinstance(x0[0], (list, tuple)):
+   177                                                   x0 = [x0]
+   178                                           
+   179         1            2      2.0      0.0      if not isinstance(x0, list):
+   180                                                   raise ValueError("`x0` should be a list, but got %s" % type(x0))
+   181                                           
+   182         1            2      2.0      0.0      if n_random_starts == 0 and not x0:
+   183                                                   raise ValueError("Either set `n_random_starts` > 0,"
+   184                                                                    " or provide `x0`")
+   185                                           
+   186         1          681    681.0      0.0      if isinstance(y0, Iterable):
+   187                                                   y0 = list(y0)
+   188         1          129    129.0      0.0      elif isinstance(y0, numbers.Number):
+   189                                                   y0 = [y0]
+   190                                           
+   191                                               # is the budget for calling `func` large enough?
+   192         1            2      2.0      0.0      required_calls = n_random_starts + (len(x0) if not y0 else 0)
+   193         1            2      2.0      0.0      if n_calls < required_calls:
+   194                                                   raise ValueError(
+   195                                                       "Expected `n_calls` >= %d, got %d" % (required_calls, n_calls))
+   196                                           
+   197                                               # Number of points the user wants to evaluate before it makes sense to
+   198                                               # fit a surrogate model
+   199         1            2      2.0      0.0      n_initial_points = n_random_starts + len(x0)
+   200         1            2      2.0      0.0      optimizer = Optimizer(dimensions, base_estimator,
+   201         1            1      1.0      0.0                            n_initial_points=n_initial_points,
+   202         1            1      1.0      0.0                            acq_func=acq_func, acq_optimizer=acq_optimizer,
+   203         1            1      1.0      0.0                            random_state=random_state,
+   204         1            1      1.0      0.0                            acq_optimizer_kwargs=acq_optimizer_kwargs,
+   205         1         9196   9196.0      0.0                            acq_func_kwargs=acq_func_kwargs)
+   206                                           
+   207         1            4      4.0      0.0      assert all(isinstance(p, Iterable) for p in x0)
+   208                                           
+   209         1            4      4.0      0.0      if not all(len(p) == optimizer.space.n_dims for p in x0):
+   210                                                   raise RuntimeError("Optimization space (%s) and initial points in x0 "
+   211                                                                      "use inconsistent dimensions." % optimizer.space)
+   212                                           
+   213         1            5      5.0      0.0      callbacks = check_callback(callback)
+   214         1            2      2.0      0.0      if verbose:
+   215         1            3      3.0      0.0          callbacks.append(VerboseCallback(
+   216         1            3      3.0      0.0              n_init=len(x0) if not y0 else 0,
+   217         1            2      2.0      0.0              n_random=n_random_starts,
+   218         1           62     62.0      0.0              n_total=n_calls))
+   219                                           
+   220                                               # setting the scope for these variables
+   221         1            2      2.0      0.0      result = None
+   222                                           
+   223                                               # User suggested points at which to evaluate the objective first
+   224         1            3      3.0      0.0      if x0 and y0 is None:
+   225                                                   y0 = list(map(func, x0))
+   226                                                   n_calls -= len(y0)
+   227                                           
+   228                                               # Pass user suggested initialisation points to the optimizer
+   229         1            2      2.0      0.0      if x0:
+   230                                                   if not (isinstance(y0, Iterable) or isinstance(y0, numbers.Number)):
+   231                                                       raise ValueError(
+   232                                                           "`y0` should be an iterable or a scalar, got %s" % type(y0))
+   233                                           
+   234                                                   if len(x0) != len(y0):
+   235                                                       raise ValueError("`x0` and `y0` should have the same length")
+   236                                           
+   237                                           
+   238                                                   result = optimizer.tell(x0, y0)
+   239                                                   result.specs = specs
+   240                                           
+   241                                                   if eval_callbacks(callbacks, result):
+   242                                                       return result
+   243                                           
+   244                                               # Bayesian optimization loop
+   245       101          546      5.4      0.0      for n in range(n_calls):
+   246       100       325925   3259.2      0.1          next_x = optimizer.ask()
+   247                                           
+   248                                                   # no need to fit a model on the last iteration
+   249       100          335      3.4      0.0          fit_model = n < n_calls - 1
+   250       100     30859511 308595.1     12.2          next_y = func(next_x)
+   251       100    220730866 2207308.7     87.6          result = optimizer.tell(next_x, next_y, fit=fit_model)
+   252       100          494      4.9      0.0          result.specs = specs
+   253                                           
+   254       100        20315    203.2      0.0          if eval_callbacks(callbacks, result):
+   255                                                       break
+   256                                           
+   257         1            3      3.0      0.0      return result
+
+Total time: 251.973 s
+File: /Users/youngtodd/scikit-optimize/skopt/optimizer/gp.py
+Function: gp_minimize at line 13
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    13                                           @profile
+    14                                           def gp_minimize(func, dimensions, base_estimator=None,
+    15                                                           n_calls=100, n_random_starts=10,
+    16                                                           acq_func="gp_hedge", acq_optimizer="auto", x0=None, y0=None,
+    17                                                           random_state=None, verbose=False, callback=None,
+    18                                                           n_points=10000, n_restarts_optimizer=5, xi=0.01, kappa=1.96,
+    19                                                           noise="gaussian", n_jobs=1):
+    20                                               """Bayesian optimization using Gaussian Processes.
+    21                                           
+    22                                               If every function evaluation is expensive, for instance
+    23                                               when the parameters are the hyperparameters of a neural network
+    24                                               and the function evaluation is the mean cross-validation score across
+    25                                               ten folds, optimizing the hyperparameters by standard optimization
+    26                                               routines would take for ever!
+    27                                           
+    28                                               The idea is to approximate the function using a Gaussian process.
+    29                                               In other words the function values are assumed to follow a multivariate
+    30                                               gaussian. The covariance of the function values are given by a
+    31                                               GP kernel between the parameters. Then a smart choice to choose the
+    32                                               next parameter to evaluate can be made by the acquisition function
+    33                                               over the Gaussian prior which is much quicker to evaluate.
+    34                                           
+    35                                               The total number of evaluations, `n_calls`, are performed like the
+    36                                               following. If `x0` is provided but not `y0`, then the elements of `x0`
+    37                                               are first evaluated, followed by `n_random_starts` evaluations.
+    38                                               Finally, `n_calls - len(x0) - n_random_starts` evaluations are
+    39                                               made guided by the surrogate model. If `x0` and `y0` are both
+    40                                               provided then `n_random_starts` evaluations are first made then
+    41                                               `n_calls - n_random_starts` subsequent evaluations are made
+    42                                               guided by the surrogate model.
+    43                                           
+    44                                               Parameters
+    45                                               ----------
+    46                                               * `func` [callable]:
+    47                                                   Function to minimize. Should take a array of parameters and
+    48                                                   return the function values.
+    49                                           
+    50                                               * `dimensions` [list, shape=(n_dims,)]:
+    51                                                   List of search space dimensions.
+    52                                                   Each search dimension can be defined either as
+    53                                           
+    54                                                   - a `(upper_bound, lower_bound)` tuple (for `Real` or `Integer`
+    55                                                     dimensions),
+    56                                                   - a `(upper_bound, lower_bound, "prior")` tuple (for `Real`
+    57                                                     dimensions),
+    58                                                   - as a list of categories (for `Categorical` dimensions), or
+    59                                                   - an instance of a `Dimension` object (`Real`, `Integer` or
+    60                                                     `Categorical`).
+    61                                           
+    62                                                    NOTE: The upper and lower bounds are inclusive for `Integer`
+    63                                                    dimensions.
+    64                                           
+    65                                               * `base_estimator` [a Gaussian process estimator]:
+    66                                                   The Gaussian process estimator to use for optimization.
+    67                                                   By default, a Matern kernel is used with the following
+    68                                                   hyperparameters tuned.
+    69                                                   - All the length scales of the Matern kernel.
+    70                                                   - The covariance amplitude that each element is multiplied with.
+    71                                                   - Noise that is added to the matern kernel. The noise is assumed
+    72                                                     to be iid gaussian.
+    73                                           
+    74                                               * `n_calls` [int, default=100]:
+    75                                                   Number of calls to `func`.
+    76                                           
+    77                                               * `n_random_starts` [int, default=10]:
+    78                                                   Number of evaluations of `func` with random points before
+    79                                                   approximating it with `base_estimator`.
+    80                                           
+    81                                               * `acq_func` [string, default=`"EI"`]:
+    82                                                   Function to minimize over the gaussian prior. Can be either
+    83                                           
+    84                                                   - `"LCB"` for lower confidence bound.
+    85                                                   - `"EI"` for negative expected improvement.
+    86                                                   - `"PI"` for negative probability of improvement.
+    87                                                   - `"gp_hedge"` Probabilistically choose one of the above three
+    88                                                     acquisition functions at every iteration. The weightage
+    89                                                     given to these gains can be set by `\eta` through `acq_func_kwargs`.
+    90                                                       - The gains `g_i` are initialized to zero.
+    91                                                       - At every iteration,
+    92                                                           - Each acquisition function is optimised independently to
+    93                                                             propose an candidate point `X_i`.
+    94                                                           - Out of all these candidate points, the next point `X_best` is
+    95                                                             chosen by `softmax(\eta g_i)`
+    96                                                           - After fitting the surrogate model with `(X_best, y_best)`,
+    97                                                             the gains are updated such that `g_i -= \mu(X_i)`
+    98                                                   - `"EIps" for negated expected improvement per second to take into
+    99                                                     account the function compute time. Then, the objective function is
+   100                                                     assumed to return two values, the first being the objective value and
+   101                                                     the second being the time taken in seconds.
+   102                                                   - `"PIps"` for negated probability of improvement per second. The
+   103                                                     return type of the objective function is assumed to be similar to
+   104                                                     that of `"EIps
+   105                                           
+   106                                               * `acq_optimizer` [string, `"sampling"` or `"lbfgs"`, default=`"lbfgs"`]:
+   107                                                   Method to minimize the acquistion function. The fit model
+   108                                                   is updated with the optimal value obtained by optimizing `acq_func`
+   109                                                   with `acq_optimizer`.
+   110                                           
+   111                                                   The `acq_func` is computed at `n_points` sampled randomly.
+   112                                           
+   113                                                   - If set to `"auto"`, then `acq_optimizer` is configured on the
+   114                                                     basis of the space searched over.
+   115                                                     If the space is Categorical then this is set to be "sampling"`.
+   116                                                   - If set to `"sampling"`, then the point among these `n_points`
+   117                                                     where the `acq_func` is minimum is the next candidate minimum.
+   118                                                   - If set to `"lbfgs"`, then
+   119                                                         - The `n_restarts_optimizer` no. of points which the acquisition
+   120                                                           function is least are taken as start points.
+   121                                                         - `"lbfgs"` is run for 20 iterations with these points as initial
+   122                                                           points to find local minima.
+   123                                                         - The optimal of these local minima is used to update the prior.
+   124                                           
+   125                                               * `x0` [list, list of lists or `None`]:
+   126                                                   Initial input points.
+   127                                           
+   128                                                   - If it is a list of lists, use it as a list of input points.
+   129                                                   - If it is a list, use it as a single initial input point.
+   130                                                   - If it is `None`, no initial input points are used.
+   131                                           
+   132                                               * `y0` [list, scalar or `None`]
+   133                                                   Evaluation of initial input points.
+   134                                           
+   135                                                   - If it is a list, then it corresponds to evaluations of the function
+   136                                                     at each element of `x0` : the i-th element of `y0` corresponds
+   137                                                     to the function evaluated at the i-th element of `x0`.
+   138                                                   - If it is a scalar, then it corresponds to the evaluation of the
+   139                                                     function at `x0`.
+   140                                                   - If it is None and `x0` is provided, then the function is evaluated
+   141                                                     at each element of `x0`.
+   142                                           
+   143                                               * `random_state` [int, RandomState instance, or None (default)]:
+   144                                                   Set random state to something other than None for reproducible
+   145                                                   results.
+   146                                           
+   147                                               * `verbose` [boolean, default=False]:
+   148                                                   Control the verbosity. It is advised to set the verbosity to True
+   149                                                   for long optimization runs.
+   150                                           
+   151                                               * `callback` [callable, list of callables, optional]
+   152                                                   If callable then `callback(res)` is called after each call to `func`.
+   153                                                   If list of callables, then each callable in the list is called.
+   154                                           
+   155                                               * `n_points` [int, default=10000]:
+   156                                                   Number of points to sample to determine the next "best" point.
+   157                                                   Useless if acq_optimizer is set to `"lbfgs"`.
+   158                                           
+   159                                               * `n_restarts_optimizer` [int, default=5]:
+   160                                                   The number of restarts of the optimizer when `acq_optimizer`
+   161                                                   is `"lbfgs"`.
+   162                                           
+   163                                               * `kappa` [float, default=1.96]:
+   164                                                   Controls how much of the variance in the predicted values should be
+   165                                                   taken into account. If set to be very high, then we are favouring
+   166                                                   exploration over exploitation and vice versa.
+   167                                                   Used when the acquisition is `"LCB"`.
+   168                                           
+   169                                               * `xi` [float, default=0.01]:
+   170                                                   Controls how much improvement one wants over the previous best
+   171                                                   values. Used when the acquisition is either `"EI"` or `"PI"`.
+   172                                           
+   173                                               * `noise` [float, default="gaussian"]:
+   174                                                   - Use noise="gaussian" if the objective returns noisy observations.
+   175                                                     The noise of each observation is assumed to be iid with
+   176                                                     mean zero and a fixed variance.
+   177                                                   - If the variance is known before-hand, this can be set directly
+   178                                                     to the variance of the noise.
+   179                                                   - Set this to a value close to zero (1e-10) if the function is
+   180                                                     noise-free. Setting to zero might cause stability issues.
+   181                                           
+   182                                               * `n_jobs` [int, default=1]
+   183                                                   Number of cores to run in parallel while running the lbfgs
+   184                                                   optimizations over the acquisition function. Valid only
+   185                                                   when `acq_optimizer` is set to "lbfgs."
+   186                                                   Defaults to 1 core. If `n_jobs=-1`, then number of jobs is set
+   187                                                   to number of cores.
+   188                                           
+   189                                               Returns
+   190                                               -------
+   191                                               * `res` [`OptimizeResult`, scipy object]:
+   192                                                   The optimization result returned as a OptimizeResult object.
+   193                                                   Important attributes are:
+   194                                           
+   195                                                   - `x` [list]: location of the minimum.
+   196                                                   - `fun` [float]: function value at the minimum.
+   197                                                   - `models`: surrogate models used for each iteration.
+   198                                                   - `x_iters` [list of lists]: location of function evaluation for each
+   199                                                      iteration.
+   200                                                   - `func_vals` [array]: function value for each iteration.
+   201                                                   - `space` [Space]: the optimization space.
+   202                                                   - `specs` [dict]`: the call specifications.
+   203                                                   - `rng` [RandomState instance]: State of the random state
+   204                                                      at the end of minimization.
+   205                                           
+   206                                                   For more details related to the OptimizeResult object, refer
+   207                                                   http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.OptimizeResult.html
+   208                                               """
+   209                                               # Check params
+   210         1          112    112.0      0.0      rng = check_random_state(random_state)
+   211         1        17298  17298.0      0.0      transformed_dims = normalize_dimensions(dimensions)
+   212         1           63     63.0      0.0      space = Space(transformed_dims)
+   213         1            1      1.0      0.0      base_estimator = cook_estimator("GP", space=space, random_state=rng,
+   214         1         2427   2427.0      0.0                                      noise=noise)
+   215                                           
+   216         1            1      1.0      0.0      return base_minimize(
+   217         1            1      1.0      0.0          func, dimensions, base_estimator=base_estimator,
+   218         1            1      1.0      0.0          acq_func=acq_func,
+   219         1            1      1.0      0.0          xi=xi, kappa=kappa, acq_optimizer=acq_optimizer, n_calls=n_calls,
+   220         1            1      1.0      0.0          n_points=n_points, n_random_starts=n_random_starts,
+   221         1            1      1.0      0.0          n_restarts_optimizer=n_restarts_optimizer,
+   222         1            1      1.0      0.0          x0=x0, y0=y0, random_state=random_state, verbose=verbose,
+   223         1    251953324 251953324.0    100.0          callback=callback, n_jobs=n_jobs)
+
+Total time: 0.001781 s
+File: /Users/youngtodd/scikit-optimize/skopt/optimizer/optimizer.py
+Function: _check_arguments at line 200
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   200                                               @profile
+   201                                               def _check_arguments(self, base_estimator, n_initial_points,
+   202                                                                    acq_optimizer):
+   203                                                   """Check arguments for sanity."""
+   204                                           
+   205         1            2      2.0      0.1          if isinstance(base_estimator, str):
+   206                                                       base_estimator = cook_estimator(
+   207                                                           base_estimator, space=self.space, random_state=self.rng)
+   208                                           
+   209         1            4      4.0      0.2          if not is_regressor(base_estimator) and base_estimator is not None:
+   210                                                       raise ValueError(
+   211                                                           "%s has to be a regressor." % base_estimator)
+   212                                           
+   213         1            1      1.0      0.1          if "ps" in self.acq_func:
+   214                                                       self.base_estimator_ = MultiOutputRegressor(base_estimator)
+   215                                                   else:
+   216         1            1      1.0      0.1              self.base_estimator_ = base_estimator
+   217                                           
+   218         1            1      1.0      0.1          if n_initial_points < 0:
+   219                                                       raise ValueError(
+   220                                                           "Expected `n_initial_points` >= 0, got %d" % n_initial_points)
+   221         1            1      1.0      0.1          self._n_initial_points = n_initial_points
+   222         1            2      2.0      0.1          self.n_initial_points_ = n_initial_points
+   223                                           
+   224         1            0      0.0      0.0          if acq_optimizer == "auto":
+   225         1          987    987.0     55.4              if has_gradients(self.base_estimator_):
+   226                                                           acq_optimizer = "sampling"
+   227                                                       else:
+   228         1            2      2.0      0.1                  acq_optimizer = "lbfgs"
+   229                                           
+   230         1            1      1.0      0.1          if acq_optimizer not in ["lbfgs", "sampling"]:
+   231                                                       raise ValueError("Expected acq_optimizer to be 'lbfgs' or "
+   232                                                                        "'sampling', got {0}".format(acq_optimizer))
+   233                                           
+   234         1          777    777.0     43.6          if has_gradients(self.base_estimator_) and acq_optimizer != "sampling":
+   235                                                       raise ValueError("The regressor {0} should run with "
+   236                                                                        "acq_optimizer"
+   237                                                                        "='sampling'.".format(type(base_estimator)))
+   238                                           
+   239         1            2      2.0      0.1          self.acq_optimizer = acq_optimizer
+
+Total time: 0 s
+File: /Users/youngtodd/scikit-optimize/skopt/optimizer/optimizer.py
+Function: copy at line 241
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   241                                               @profile
+   242                                               def copy(self, random_state=None):
+   243                                                   """Create a shallow copy of an instance of the optimizer.
+   244                                           
+   245                                                   Parameters
+   246                                                   ----------
+   247                                                   * `random_state` [int, RandomState instance, or None (default)]:
+   248                                                       Set the random state of the copy.
+   249                                                   """
+   250                                           
+   251                                                   optimizer = Optimizer(
+   252                                                       dimensions=self.space.dimensions,
+   253                                                       base_estimator=self.base_estimator_,
+   254                                                       n_initial_points=self.n_initial_points_,
+   255                                                       acq_func=self.acq_func,
+   256                                                       acq_optimizer=self.acq_optimizer,
+   257                                                       acq_func_kwargs=self.acq_func_kwargs,
+   258                                                       acq_optimizer_kwargs=self.acq_optimizer_kwargs,
+   259                                                       random_state=random_state,
+   260                                                   )
+   261                                           
+   262                                                   if hasattr(self, "gains_"):
+   263                                                       optimizer.gains_ = np.copy(self.gains_)
+   264                                           
+   265                                                   if self.Xi:
+   266                                                       optimizer.tell(self.Xi, self.yi)
+   267                                           
+   268                                                   return optimizer
+
+Total time: 0.321435 s
+File: /Users/youngtodd/scikit-optimize/skopt/optimizer/optimizer.py
+Function: ask at line 270
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   270                                               @profile
+   271                                               def ask(self, n_points=None, strategy="cl_min"):
+   272                                                   """Query point or multiple points at which objective should be evaluated.
+   273                                           
+   274                                                   * `n_points` [int or None, default=None]:
+   275                                                       Number of points returned by the ask method.
+   276                                                       If the value is None, a single point to evaluate is returned.
+   277                                                       Otherwise a list of points to evaluate is returned of size
+   278                                                       n_points. This is useful if you can evaluate your objective in
+   279                                                       parallel, and thus obtain more objective function evaluations per
+   280                                                       unit of time.
+   281                                           
+   282                                                   * `strategy` [string, default=`"cl_min"`]:
+   283                                                       Method to use to sample multiple points (see also `n_points`
+   284                                                       description). This parameter is ignored if n_points = None.
+   285                                                       Supported options are `"cl_min"`, `"cl_mean"` or `"cl_max"`.
+   286                                           
+   287                                                       - If set to `"cl_min"`, then constant liar strtategy is used
+   288                                                          with lie objective value being minimum of observed objective
+   289                                                          values. `"cl_mean"` and `"cl_max"` means mean and max of values
+   290                                                          respectively. For details on this strategy see:
+   291                                           
+   292                                                          https://hal.archives-ouvertes.fr/hal-00732512/document
+   293                                           
+   294                                                          With this strategy a copy of optimizer is created, which is
+   295                                                          then asked for a point, and the point is told to the copy of
+   296                                                          optimizer with some fake objective (lie), the next point is
+   297                                                          asked from copy, it is also told to the copy with fake
+   298                                                          objective and so on. The type of lie defines different
+   299                                                          flavours of `cl_x` strategies.
+   300                                           
+   301                                                   """
+   302       100          320      3.2      0.1          if n_points is None:
+   303       100       321115   3211.2     99.9              return self._ask()
+   304                                           
+   305                                                   supported_strategies = ["cl_min", "cl_mean", "cl_max"]
+   306                                           
+   307                                                   if not (isinstance(n_points, int) and n_points > 0):
+   308                                                       raise ValueError(
+   309                                                           "n_points should be int > 0, got " + str(n_points)
+   310                                                       )
+   311                                           
+   312                                                   if strategy not in supported_strategies:
+   313                                                       raise ValueError(
+   314                                                           "Expected parallel_strategy to be one of " +
+   315                                                           str(supported_strategies) + ", " + "got %s" % strategy
+   316                                                       )
+   317                                           
+   318                                                   # Caching the result with n_points not None. If some new parameters
+   319                                                   # are provided to the ask, the cache_ is not used.
+   320                                                   if (n_points, strategy) in self.cache_:
+   321                                                       return self.cache_[(n_points, strategy)]
+   322                                           
+   323                                                   # Copy of the optimizer is made in order to manage the
+   324                                                   # deletion of points with "lie" objective (the copy of
+   325                                                   # oiptimizer is simply discarded)
+   326                                                   opt = self.copy()
+   327                                           
+   328                                                   X = []
+   329                                                   for i in range(n_points):
+   330                                                       x = opt.ask()
+   331                                                       X.append(x)
+   332                                                       if strategy == "cl_min":
+   333                                                           y_lie = np.min(opt.yi) if opt.yi else 0.0  # CL-min lie
+   334                                                       elif strategy == "cl_mean":
+   335                                                           y_lie = np.mean(opt.yi) if opt.yi else 0.0  # CL-mean lie
+   336                                                       else:
+   337                                                           y_lie = np.max(opt.yi) if opt.yi else 0.0  # CL-max lie
+   338                                                       opt.tell(x, y_lie)  # lie to the optimizer
+   339                                           
+   340                                                   self.cache_ = {(n_points, strategy): X}  # cache_ the result
+   341                                           
+   342                                                   return X
+
+Total time: 0.317506 s
+File: /Users/youngtodd/scikit-optimize/skopt/optimizer/optimizer.py
+Function: _ask at line 344
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   344                                               @profile
+   345                                               def _ask(self):
+   346                                                   """Suggest next point at which to evaluate the objective.
+   347                                           
+   348                                                   Return a random point while not at least `n_initial_points`
+   349                                                   observations have been `tell`ed, after that `base_estimator` is used
+   350                                                   to determine the next point.
+   351                                                   """
+   352       100          430      4.3      0.1          if self._n_initial_points > 0 or self.base_estimator_ is None:
+   353                                                       # this will not make a copy of `self.rng` and hence keep advancing
+   354                                                       # our random state.
+   355        10        28114   2811.4      8.9              return self.space.rvs(random_state=self.rng)[0]
+   356                                           
+   357                                                   else:
+   358        90          273      3.0      0.1              if not self.models:
+   359                                                           raise RuntimeError("Random evaluations exhausted and no "
+   360                                                                              "model has been fit.")
+   361                                           
+   362        90          237      2.6      0.1              next_x = self._next_x
+   363        90          386      4.3      0.1              min_delta_x = min([self.space.distance(next_x, xi)
+   364        90       287752   3197.2     90.6                                 for xi in self.Xi])
+   365        90          198      2.2      0.1              if abs(min_delta_x) <= 1e-8:
+   366                                                           warnings.warn("The objective has been evaluated "
+   367                                                                         "at this point before.")
+   368                                           
+   369                                                       # return point computed from last call to tell()
+   370        90          116      1.3      0.0              return next_x
+
+Total time: 220.622 s
+File: /Users/youngtodd/scikit-optimize/skopt/optimizer/optimizer.py
+Function: tell at line 372
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   372                                               @profile
+   373                                               def tell(self, x, y, fit=True):
+   374                                                   """Record an observation (or several) of the objective function.
+   375                                           
+   376                                                   Provide values of the objective function at points suggested by `ask()`
+   377                                                   or other points. By default a new model will be fit to all
+   378                                                   observations. The new model is used to suggest the next point at
+   379                                                   which to evaluate the objective. This point can be retrieved by calling
+   380                                                   `ask()`.
+   381                                           
+   382                                                   To add observations without fitting a new model set `fit` to False.
+   383                                           
+   384                                                   To add multiple observations in a batch pass a list-of-lists for `x`
+   385                                                   and a list of scalars for `y`.
+   386                                           
+   387                                                   Parameters
+   388                                                   ----------
+   389                                                   * `x` [list or list-of-lists]:
+   390                                                       Point at which objective was evaluated.
+   391                                           
+   392                                                   * `y` [scalar or list]:
+   393                                                       Value of objective at `x`.
+   394                                           
+   395                                                   * `fit` [bool, default=True]
+   396                                                       Fit a model to observed evaluations of the objective. A model will
+   397                                                       only be fitted after `n_initial_points` points have been told to
+   398                                                       the optimizer irrespective of the value of `fit`.
+   399                                                   """
+   400       100        36651    366.5      0.0          check_x_in_space(x, self.space)
+   401                                           
+   402       100         4772     47.7      0.0          if "ps" in self.acq_func:
+   403                                                       if is_2Dlistlike(x):
+   404                                                           if np.ndim(y) == 2 and np.shape(y)[1] == 2:
+   405                                                               y = [[val, log(t)] for (val, t) in y]
+   406                                                               self.Xi.extend(x)
+   407                                                               self.yi.extend(y)
+   408                                                           else:
+   409                                                               raise TypeError("expcted y to be a list of (func_val, t)")
+   410                                                           self._n_initial_points -= len(y)
+   411                                                       elif is_listlike(x):
+   412                                                           if np.ndim(y) == 1 and len(y) == 2:
+   413                                                               y = list(y)
+   414                                                               y[1] = log(y[1])
+   415                                                               self.Xi.append(x)
+   416                                                               self.yi.append(y)
+   417                                                           else:
+   418                                                               raise TypeError("expected y to be (func_val, t)")
+   419                                                           self._n_initial_points -= 1
+   420                                           
+   421                                                   # if y isn't a scalar it means we have been handed a batch of points
+   422       100          843      8.4      0.0          elif is_listlike(y) and is_2Dlistlike(x):
+   423                                                       self.Xi.extend(x)
+   424                                                       self.yi.extend(y)
+   425                                                       self._n_initial_points -= len(y)
+   426                                           
+   427       100          600      6.0      0.0          elif is_listlike(x):
+   428       100         3738     37.4      0.0              if isinstance(y, Number):
+   429       100         1846     18.5      0.0                  self.Xi.append(x)
+   430       100         5501     55.0      0.0                  self.yi.append(y)
+   431       100          898      9.0      0.0                  self._n_initial_points -= 1
+   432                                                       else:
+   433                                                           raise ValueError("`func` should return a scalar")
+   434                                           
+   435                                                   else:
+   436                                                       raise ValueError("Type of arguments `x` (%s) and `y` (%s) "
+   437                                                                        "not compatible." % (type(x), type(y)))
+   438                                           
+   439                                                   # optimizer learned somethnig new - discard cache
+   440       100         1527     15.3      0.0          self.cache_ = {}
+   441                                           
+   442                                                   # after being "told" n_initial_points we switch from sampling
+   443                                                   # random points to using a surrogate model
+   444       100          502      5.0      0.0          if (fit and self._n_initial_points <= 0 and
+   445        90          428      4.8      0.0             self.base_estimator_ is not None):
+   446        90        14012    155.7      0.0              transformed_bounds = np.array(self.space.transformed_bounds)
+   447        90       369424   4104.7      0.2              est = clone(self.base_estimator_)
+   448                                           
+   449        90         1492     16.6      0.0              with warnings.catch_warnings():
+   450        90         2006     22.3      0.0                  warnings.simplefilter("ignore")
+   451        90     64334322 714825.8     29.2                  est.fit(self.space.transform(self.Xi), self.yi)
+   452                                           
+   453        90         1650     18.3      0.0              if hasattr(self, "next_xs_") and self.acq_func == "gp_hedge":
+   454        89        48719    547.4      0.0                  self.gains_ -= est.predict(np.vstack(self.next_xs_))
+   455        90          596      6.6      0.0              self.models.append(est)
+   456                                           
+   457        90          485      5.4      0.0              X = self.space.transform(self.space.rvs(
+   458        90     50885283 565392.0     23.1                  n_samples=self.n_points, random_state=self.rng))
+   459        90         1734     19.3      0.0              self.next_xs_ = []
+   460       360         2208      6.1      0.0              for cand_acq_func in self.cand_acq_funcs_:
+   461       270         1507      5.6      0.0                  values = _gaussian_acquisition(
+   462       270        16545     61.3      0.0                      X=X, model=est, y_opt=np.min(self.yi),
+   463       270         1186      4.4      0.0                      acq_func=cand_acq_func,
+   464       270     45718119 169326.4     20.7                      acq_func_kwargs=self.acq_func_kwargs)
+   465                                                           # Find the minimum of the acquisition function by randomly
+   466                                                           # sampling points from the space
+   467       270         2149      8.0      0.0                  if self.acq_optimizer == "sampling":
+   468                                                               next_x = X[np.argmin(values)]
+   469                                           
+   470                                                           # Use BFGS to find the mimimum of the acquisition function, the
+   471                                                           # minimization starts from `n_restarts_optimizer` different
+   472                                                           # points and the best minimum is used
+   473       270         1159      4.3      0.0                  elif self.acq_optimizer == "lbfgs":
+   474       270       342764   1269.5      0.2                      x0 = X[np.argsort(values)[:self.n_restarts_optimizer]]
+   475                                           
+   476       270         6876     25.5      0.0                      with warnings.catch_warnings():
+   477       270         7855     29.1      0.0                          warnings.simplefilter("ignore")
+   478       270        34357    127.2      0.0                          results = Parallel(n_jobs=self.n_jobs)(
+   479       270         1701      6.3      0.0                              delayed(fmin_l_bfgs_b)(
+   480                                                                           gaussian_acquisition_1D, x,
+   481                                                                           args=(est, np.min(self.yi), cand_acq_func,
+   482                                                                                 self.acq_func_kwargs),
+   483                                                                           bounds=self.space.transformed_bounds,
+   484                                                                           approx_grad=False,
+   485                                                                           maxiter=20)
+   486       270     58693897 217384.8     26.6                              for x in x0)
+   487                                           
+   488       270         6888     25.5      0.0                      cand_xs = np.array([r[0] for r in results])
+   489       270         3937     14.6      0.0                      cand_acqs = np.array([r[1] for r in results])
+   490       270         5070     18.8      0.0                      next_x = cand_xs[np.argmin(cand_acqs)]
+   491                                           
+   492                                                           # lbfgs should handle this but just in case there are
+   493                                                           # precision errors.
+   494       270         5031     18.6      0.0                  if not self.space.is_categorical:
+   495       270         1169      4.3      0.0                      next_x = np.clip(
+   496       270         1517      5.6      0.0                          next_x, transformed_bounds[:, 0],
+   497       270         7231     26.8      0.0                          transformed_bounds[:, 1])
+   498       270         1429      5.3      0.0                  self.next_xs_.append(next_x)
+   499                                           
+   500        90          440      4.9      0.0              if self.acq_func == "gp_hedge":
+   501        90          608      6.8      0.0                  logits = np.array(self.gains_)
+   502        90         2752     30.6      0.0                  logits -= np.max(logits)
+   503        90         1986     22.1      0.0                  exp_logits = np.exp(self.eta * logits)
+   504        90         2482     27.6      0.0                  probs = exp_logits / np.sum(exp_logits)
+   505        90          518      5.8      0.0                  next_x = self.next_xs_[np.argmax(self.rng.multinomial(1,
+   506        90         4116     45.7      0.0                                                                        probs))]
+   507                                                       else:
+   508                                                           next_x = self.next_xs_[0]
+   509                                           
+   510                                                       # note the need for [0] at the end
+   511        90          439      4.9      0.0              self._next_x = self.space.inverse_transform(
+   512        90        20659    229.5      0.0                  next_x.reshape((1, -1)))[0]
+   513                                           
+   514                                                   # Pack results
+   515       100          993      9.9      0.0          return create_result(self.Xi, self.yi, self.space, self.rng,
+   516       100         7147     71.5      0.0                               models=self.models)
+
+Total time: 0 s
+File: /Users/youngtodd/scikit-optimize/skopt/optimizer/optimizer.py
+Function: run at line 518
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   518                                               @profile
+   519                                               def run(self, func, n_iter=1):
+   520                                                   """Execute ask() + tell() `n_iter` times"""
+   521                                                   for _ in range(n_iter):
+   522                                                       x = self.ask()
+   523                                                       self.tell(x, func(x))
+   524                                           
+   525                                                   return create_result(self.Xi, self.yi, self.space, self.rng,
+   526                                                                        models=self.models)
+
+Total time: 0.024255 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: check_dimension at line 24
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    24                                           @profile
+    25                                           def check_dimension(dimension, transform=None):
+    26                                               """
+    27                                               Checks that the provided dimension falls into one of the
+    28                                               supported types. For a list of supported types, look at
+    29                                               the documentation of `dimension` below.
+    30                                           
+    31                                               Parameters
+    32                                               ----------
+    33                                               * `dimension`:
+    34                                                   Search space Dimension.
+    35                                                   Each search dimension can be defined either as
+    36                                           
+    37                                                   - a `(upper_bound, lower_bound)` tuple (for `Real` or `Integer`
+    38                                                     dimensions),
+    39                                                   - a `(upper_bound, lower_bound, "prior")` tuple (for `Real`
+    40                                                     dimensions),
+    41                                                   - as a list of categories (for `Categorical` dimensions), or
+    42                                                   - an instance of a `Dimension` object (`Real`, `Integer` or
+    43                                                     `Categorical`).
+    44                                           
+    45                                               * `transform` ["identity", "normalize", "onehot" optional]:
+    46                                                   - For `Categorical` dimensions, the following transformations are
+    47                                                     supported.
+    48                                           
+    49                                                     - "onehot" (default) one-hot transformation of the original space.
+    50                                                     - "identity" same as the original space.
+    51                                           
+    52                                                   - For `Real` and `Integer` dimensions, the following transformations
+    53                                                     are supported.
+    54                                           
+    55                                                     - "identity", (default) the transformed space is the same as the
+    56                                                       original space.
+    57                                                     - "normalize", the transformed space is scaled to be between 0 and 1.
+    58                                           
+    59                                               Returns
+    60                                               -------
+    61                                               * `dimension`:
+    62                                                   Dimension instance.
+    63                                               """
+    64        25           60      2.4      0.2      if isinstance(dimension, Dimension):
+    65        10           13      1.3      0.1          return dimension
+    66                                           
+    67        15           39      2.6      0.2      if not isinstance(dimension, (list, tuple, np.ndarray)):
+    68                                                   raise ValueError("Dimension has to be a list or tuple.")
+    69                                           
+    70        15           29      1.9      0.1      if len(dimension) == 2:
+    71        12           60      5.0      0.2          if any([isinstance(d, str) for d in dimension]):
+    72                                                       return Categorical(dimension, transform=transform)
+    73        12          153     12.8      0.6          elif all([isinstance(dim, numbers.Integral) for dim in dimension]):
+    74        12        18633   1552.8     76.8              return Integer(*dimension, transform=transform)
+    75                                                   elif any([isinstance(dim, numbers.Real) for dim in dimension]):
+    76                                                       return Real(*dimension, transform=transform)
+    77                                                   else:
+    78                                                       raise ValueError("Invalid dimension {}. Read the documentation for"
+    79                                                                        " supported types.".format(dimension))
+    80                                           
+    81         3            3      1.0      0.0      if len(dimension) == 3:
+    82         3           16      5.3      0.1          if (any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and
+    83         3            6      2.0      0.0              dimension[2] in ["uniform", "log-uniform"]):
+    84         3         5243   1747.7     21.6              return Real(*dimension, transform=transform)
+    85                                                   else:
+    86                                                       return Categorical(dimension, transform=transform)
+    87                                           
+    88                                               if len(dimension) > 3:
+    89                                                   return Categorical(dimension, transform=transform)
+    90                                           
+    91                                               raise ValueError("Invalid dimension {}. Read the documentation for "
+    92                                                                "supported types.".format(dimension))
+
+Total time: 11.0934 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: rvs at line 98
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    98                                               @profile
+    99                                               def rvs(self, n_samples=1, random_state=None):
+   100                                                   """Draw random samples.
+   101                                           
+   102                                                   Parameters
+   103                                                   ----------
+   104                                                   * `n_samples` [int or None]:
+   105                                                       The number of samples to be drawn.
+   106                                           
+   107                                                   * `random_state` [int, RandomState instance, or None (default)]:
+   108                                                       Set random state to something other than None for reproducible
+   109                                                       results.
+   110                                                   """
+   111       500        11987     24.0      0.1          rng = check_random_state(random_state)
+   112       500     11019978  22040.0     99.3          samples = self._rvs.rvs(size=n_samples, random_state=rng)
+   113       500        61466    122.9      0.6          return self.inverse_transform(samples)
+
+Total time: 0.159796 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: transform at line 115
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   115                                               @profile
+   116                                               def transform(self, X):
+   117                                                   """Transform samples form the original space to a warped space."""
+   118       900       159796    177.6    100.0          return self.transformer.transform(X)
+
+Total time: 0.047932 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: inverse_transform at line 120
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   120                                               @profile
+   121                                               def inverse_transform(self, Xt):
+   122                                                   """Inverse transform samples from the warped space back into the
+   123                                                      original space.
+   124                                                   """
+   125       950        47932     50.5    100.0          return self.transformer.inverse_transform(Xt)
+
+Total time: 0.005088 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: _uniform_inclusive at line 144
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   144                                           @profile
+   145                                           def _uniform_inclusive(loc=0.0, scale=1.0):
+   146                                               # like scipy.stats.distributions but inclusive of `high`
+   147                                               # XXX scale + 1. might not actually be a float after scale if
+   148                                               # XXX scale is very large.
+   149         3         5088   1696.0    100.0      return uniform(loc=loc, scale=np.nextafter(scale, scale + 1.))
+
+Total time: 0 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: __eq__ at line 492
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   492                                               @profile
+   493                                               def __eq__(self, other):
+   494                                                   return all([a == b for a, b in zip(self.dimensions, other.dimensions)])
+
+Total time: 0 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: __repr__ at line 496
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   496                                               @profile
+   497                                               def __repr__(self):
+   498                                                   if len(self.dimensions) > 31:
+   499                                                       dims = self.dimensions[:15] + [_Ellipsis()] + self.dimensions[-15:]
+   500                                                   else:
+   501                                                       dims = self.dimensions
+   502                                                   return "Space([{}])".format(',\n       '.join(map(str, dims)))
+
+Total time: 16.5085 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: transform at line 554
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   554                                               @profile
+   555                                               def transform(self, X):
+   556                                                   """Transform samples from the original space into a warped space.
+   557                                           
+   558                                                   Note: this transformation is expected to be used to project samples
+   559                                                         into a suitable space for numerical optimization.
+   560                                           
+   561                                                   Parameters
+   562                                                   ----------
+   563                                                   * `X` [list of lists, shape=(n_samples, n_dims)]:
+   564                                                       The samples to transform.
+   565                                           
+   566                                                   Returns
+   567                                                   -------
+   568                                                   * `Xt` [array of floats, shape=(n_samples, transformed_n_dims)]
+   569                                                       The transformed samples.
+   570                                                   """
+   571                                                   # Pack by dimension
+   572       180          502      2.8      0.0          columns = []
+   573      1080         1622      1.5      0.0          for dim in self.dimensions:
+   574       900         1368      1.5      0.0              columns.append([])
+   575                                           
+   576    905085      1044752      1.2      6.3          for i in range(len(X)):
+   577   5429430      7598092      1.4     46.0              for j in range(self.n_dims):
+   578   4524525      7119304      1.6     43.1                  columns[j].append(X[i][j])
+   579                                           
+   580                                                   # Transform
+   581      1080         2048      1.9      0.0          for j in range(self.n_dims):
+   582       900       174900    194.3      1.1              columns[j] = self.dimensions[j].transform(columns[j])
+   583                                           
+   584                                                   # Repack as an array
+   585       180       565577   3142.1      3.4          Xt = np.hstack([np.asarray(c).reshape((len(X), -1)) for c in columns])
+   586                                           
+   587       180          353      2.0      0.0          return Xt
+
+Total time: 0.014247 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: inverse_transform at line 589
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   589                                               @profile
+   590                                               def inverse_transform(self, Xt):
+   591                                                   """Inverse transform samples from the warped space back to the
+   592                                                      original space.
+   593                                           
+   594                                                   Parameters
+   595                                                   ----------
+   596                                                   * `Xt` [array of floats, shape=(n_samples, transformed_n_dims)]:
+   597                                                       The samples to inverse transform.
+   598                                           
+   599                                                   Returns
+   600                                                   -------
+   601                                                   * `X` [list of lists, shape=(n_samples, n_dims)]
+   602                                                       The original samples.
+   603                                                   """
+   604                                                   # Inverse transform
+   605        90          129      1.4      0.9          columns = []
+   606        90           98      1.1      0.7          start = 0
+   607                                           
+   608       540         1047      1.9      7.3          for j in range(self.n_dims):
+   609       450          533      1.2      3.7              dim = self.dimensions[j]
+   610       450          879      2.0      6.2              offset = dim.transformed_size
+   611                                           
+   612       450          465      1.0      3.3              if offset == 1:
+   613       450         8239     18.3     57.8                  columns.append(dim.inverse_transform(Xt[:, start]))
+   614                                                       else:
+   615                                                           columns.append(
+   616                                                               dim.inverse_transform(Xt[:, start:start+offset]))
+   617                                           
+   618       450          559      1.2      3.9              start += offset
+   619                                           
+   620                                                   # Transpose
+   621        90           99      1.1      0.7          rows = []
+   622                                           
+   623       180          408      2.3      2.9          for i in range(len(Xt)):
+   624        90           92      1.0      0.6              r = []
+   625       540          758      1.4      5.3              for j in range(self.n_dims):
+   626       450          749      1.7      5.3                  r.append(columns[j][i])
+   627                                           
+   628        90          107      1.2      0.8              rows.append(r)
+   629                                           
+   630        90           85      0.9      0.6          return rows
+
+Total time: 0.202767 s
+File: /Users/youngtodd/scikit-optimize/skopt/space/space.py
+Function: distance at line 679
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   679                                               @profile
+   680                                               def distance(self, point_a, point_b):
+   681                                                   """Compute distance between two points in this space.
+   682                                           
+   683                                                   Parameters
+   684                                                   ----------
+   685                                                   * `a` [array]
+   686                                                       First point.
+   687                                           
+   688                                                   * `b` [array]
+   689                                                       Second point.
+   690                                                   """
+   691      4905         4339      0.9      2.1          distance = 0.
+   692     29430        33334      1.1     16.4          for a, b, dim in zip(point_a, point_b, self.dimensions):
+   693     24525       161082      6.6     79.4              distance += dim.distance(a, b)
+   694                                           
+   695      4905         4012      0.8      2.0          return distance
+
+Total time: 30.8351 s
+File: speed_test.py
+Function: objective at line 25
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    25                                                              learning_rate=learning_rate,
+    26                                                              max_features=max_features,
+    27       100          166      1.7      0.0                     min_samples_split=min_samples_split,
+    28                                                              min_samples_leaf=min_samples_leaf)
+    29       100          471      4.7      0.0  
+    30       100           89      0.9      0.0      return -np.mean(cross_val_score(reg, X, y, cv=5, n_jobs=-1,
+    31       100           93      0.9      0.0                                      scoring="neg_mean_absolute_error"))
+    32       100           93      0.9      0.0  def main():
+
