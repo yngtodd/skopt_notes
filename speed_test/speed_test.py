@@ -17,7 +17,7 @@ n_features = X.shape[1]
 
 reg = GradientBoostingRegressor(n_estimators=50, random_state=0)
 
-@profile
+
 def objective(space):
     max_depth, learning_rate, max_features, min_samples_split, min_samples_leaf = space
 
